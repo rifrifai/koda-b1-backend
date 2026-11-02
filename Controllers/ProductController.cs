@@ -43,29 +43,64 @@ namespace API.Controllers
 			return Ok(ProductResponse.FromModel(product));
 		}
 
+		// [HttpPost]
+		// [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status201Created)]
+		// [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+		// public ActionResult<ProductResponse> CreateProduct([FromBody] CreateProductDto request)
+		// {
+		// 	var isExist = _catalog.GetProduct(request.ProductID);
+		// 	if (isExist is not null)
+		// 	{
+		// 		return Problem(
+		// 			statusCode: StatusCodes.Status400BadRequest,
+		// 			title: "Product ID conflict",
+		// 			detail: $"Product with ID {request.ProductID} already exists."
+		// 		);
+		// 	}
+
+		// 	var newProduct = _catalog.AddProduct(request);
+
+		// 	var response = ProductResponse.FromModel(newProduct);
+
+		// 	return CreatedAtAction(
+		// 		nameof(GetProduct), 
+		// 		new { productID = newProduct.ProductID }, 
+		// 		response
+		// 	);
+		// }
 		[HttpPost]
-		[ProducesResponseType(typeof(ProductResponse), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(IEnumerable<ProductResponse>), StatusCodes.Status201Created)]
 		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-		public ActionResult<ProductResponse> CreateProduct([FromBody] CreateProductDto request)
+		public ActionResult<IEnumerable<ProductResponse>> CreateProducts([FromBody] IEnumerable<CreateProductDto> requests)
 		{
-			var isExist = _catalog.GetProduct(request.ProductID);
-			if (isExist is not null)
+			var responses = new List<ProductResponse>();
+
+			foreach (var request in requests)
 			{
-				return Problem(
-					statusCode: StatusCodes.Status400BadRequest,
-					title: "Product ID conflict",
-					detail: $"Product with ID {request.ProductID} already exists."
-				);
+				// 1. Validasi duplikasi ID
+				var existingProduct = _catalog.GetProduct(request.ProductID);
+				if (existingProduct is not null)
+				{
+					return Problem(
+						statusCode: StatusCodes.Status400BadRequest,
+						title: "Product Already Exists",
+						detail: $"Product with ID {request.ProductID} already exists. Bulk insert aborted."
+					);
+				}
+
+				// 2. Simpan ke catalog
+				var product = _catalog.AddProduct(request);
+				
+				// 3. Tambahkan ke list response
+				responses.Add(ProductResponse.FromModel(product));
 			}
 
-			var newProduct = _catalog.AddProduct(request);
-
-			var response = ProductResponse.FromModel(newProduct);
-
+			// 4. Kembalikan semua produk yang berhasil dibuat
+			// (Untuk bulk insert, biasanya kita kembalikan URL koleksi/list produknya)
 			return CreatedAtAction(
-				nameof(GetProduct), 
-				new { productID = newProduct.ProductID }, 
-				response
+				nameof(GetAll), 
+				null, 
+				responses
 			);
 		}
 

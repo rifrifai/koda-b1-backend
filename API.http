@@ -13,9 +13,35 @@ GET {{urlBase}}/1
 POST {{urlBase}}
 Content-Type: application/json
 
-{
-    "ProductID": "PR06",
-    "Name": "Handphone",
-    "Price": 1000000,
-    "Stock": 20
-}
+[
+    {
+        "ProductID": "PR01",
+        "Name": "Handphone",
+        "Price": 1000000,
+        "Stock": 20
+    },
+    {
+        "ProductID": "PR02",
+        "Name": "Monitor",
+        "Price": 200000,
+        "Stock": 10
+    },
+    {
+        "ProductID": "PR03",
+        "Name": "Keyboard",
+        "Price": 250000,
+        "Stock": 15
+    },
+    {
+        "ProductID": "PR04",
+        "Name": "Mouse",
+        "Price": 300000,
+        "Stock": 13
+    },
+    {
+        "ProductID": "PR05",
+        "Name": "Cable",
+        "Price": 15000,
+        "Stock": 100
+    }
+]
