@@ -42,5 +42,32 @@ namespace API.Controllers
 				);
 			return Ok(ProductResponse.FromModel(product));
 		}
+
+		[HttpPost]
+		[ProducesResponseType(typeof(ProductResponse), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+		public ActionResult<ProductResponse> CreateProduct([FromBody] CreateProductDto request)
+		{
+			var isExist = _catalog.GetProduct(request.ProductID);
+			if (isExist is not null)
+			{
+				return Problem(
+					statusCode: StatusCodes.Status400BadRequest,
+					title: "Product ID conflict",
+					detail: $"Product with ID {request.ProductID} already exists."
+				);
+			}
+
+			var newProduct = _catalog.AddProduct(request);
+
+			var response = ProductResponse.FromModel(newProduct);
+
+			return CreatedAtAction(
+				nameof(GetProduct), 
+				new { productID = newProduct.ProductID }, 
+				response
+			);
+		}
+
 	}
 }

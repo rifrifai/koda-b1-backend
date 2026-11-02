@@ -1,6 +1,21 @@
-@API_HostAddress = http://localhost:5074
+@urlBase = http://localhost:5074/api/v1/product
 
-GET {{API_HostAddress}}/weatherforecast/
+GET {{urlBase}}/weatherforecast/
 Accept: application/json
 
 ###
+GET {{urlBase}}
+
+###
+GET {{urlBase}}/1
+
+###
+POST {{urlBase}}
+Content-Type: application/json
+
+{
+    "ProductID": "PR06",
+    "Name": "Handphone",
+    "Price": 1000000,
+    "Stock": 20
+}
