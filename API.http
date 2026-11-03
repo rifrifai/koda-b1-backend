@@ -1,47 +1,31 @@
 @urlBase = http://localhost:5074/api/v1/product
 
-GET {{urlBase}}/weatherforecast/
-Accept: application/json
-
 ###
 GET {{urlBase}}
 
 ###
-GET {{urlBase}}/1
+GET {{urlBase}}/PR03
 
 ###
 POST {{urlBase}}
 Content-Type: application/json
 
-[
-    {
-        "ProductID": "PR01",
-        "Name": "Handphone",
-        "Price": 1000000,
-        "Stock": 20
-    },
-    {
-        "ProductID": "PR02",
-        "Name": "Monitor",
-        "Price": 200000,
-        "Stock": 10
-    },
-    {
-        "ProductID": "PR03",
-        "Name": "Keyboard",
-        "Price": 250000,
-        "Stock": 15
-    },
-    {
-        "ProductID": "PR04",
-        "Name": "Mouse",
-        "Price": 300000,
-        "Stock": 13
-    },
-    {
-        "ProductID": "PR05",
-        "Name": "Cable",
-        "Price": 15000,
-        "Stock": 100
-    }
-]
+{
+    "ProductID": "PR01",
+    "Name": "Monitor",
+    "Price": 200000,
+    "Stock": 13
+}
+
+###
+PUT {{urlBase}}/PR01
+Content-Type: application/json
+
+{
+    "Name": "Book",
+    "Price": 100000,
+    "Stock": 30
+}
+
+###
+DELETE  {{urlBase}}/pr01

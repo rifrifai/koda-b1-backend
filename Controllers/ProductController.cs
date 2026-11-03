@@ -43,66 +43,112 @@ namespace API.Controllers
 			return Ok(ProductResponse.FromModel(product));
 		}
 
-		// [HttpPost]
-		// [ProducesResponseType(typeof(ProductResponse), StatusCodes.Status201Created)]
-		// [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-		// public ActionResult<ProductResponse> CreateProduct([FromBody] CreateProductDto request)
-		// {
-		// 	var isExist = _catalog.GetProduct(request.ProductID);
-		// 	if (isExist is not null)
-		// 	{
-		// 		return Problem(
-		// 			statusCode: StatusCodes.Status400BadRequest,
-		// 			title: "Product ID conflict",
-		// 			detail: $"Product with ID {request.ProductID} already exists."
-		// 		);
-		// 	}
-
-		// 	var newProduct = _catalog.AddProduct(request);
-
-		// 	var response = ProductResponse.FromModel(newProduct);
-
-		// 	return CreatedAtAction(
-		// 		nameof(GetProduct), 
-		// 		new { productID = newProduct.ProductID }, 
-		// 		response
-		// 	);
-		// }
 		[HttpPost]
-		[ProducesResponseType(typeof(IEnumerable<ProductResponse>), StatusCodes.Status201Created)]
-		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-		public ActionResult<IEnumerable<ProductResponse>> CreateProducts([FromBody] IEnumerable<CreateProductDto> requests)
+		[ProducesResponseType(typeof(ProductResponse), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+		public ActionResult<ProductResponse> Create([FromBody] ProductRequest request)
 		{
-			var responses = new List<ProductResponse>();
-
-			foreach (var request in requests)
+			try
 			{
-				// 1. Validasi duplikasi ID
-				var existingProduct = _catalog.GetProduct(request.ProductID);
-				if (existingProduct is not null)
+				var product = new Product(request.ProductID, request.Name, request.Price, request.Stock);
+				_catalog.CreateProduct(product);
+
+				return CreatedAtAction(
+					actionName: nameof(GetProduct),
+					routeValues: new {productID = product.ProductID},
+					value: ProductResponse.FromModel(product)
+				);
+			}
+			catch (ArgumentException e)
+			{
+				return Problem(
+					statusCode: StatusCodes.Status400BadRequest,
+					title: "Invalid Product Data",
+					detail: e.Message
+				);
+			}
+		}
+
+		[HttpDelete("{productID}")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+		public IActionResult Delete([FromRoute] string productID)
+		{
+			var product = _catalog.GetProduct(productID);
+
+			if (product is null)
+			{
+				return Problem(
+					statusCode: StatusCodes.Status404NotFound,
+					title: "Product Not Found!",
+					detail: $"No product was not found in ID {productID}"
+				);
+			}
+			_catalog.RemoveProduct(productID);
+
+			return NoContent();
+		}
+
+		[HttpPut("{productID}")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+		public ActionResult<ProductResponse> Update(
+			[FromRoute] string productID, [FromBody] UpdateProductRequest request)
+			{
+				var exitingProduct = _catalog.GetProduct(productID);
+				if (exitingProduct is null)
+				{
+					return Problem(statusCode: StatusCodes.Status404NotFound, title: "Product not found", detail: $"No product was found for ID {productID}.");
+				}
+
+				try
+				{
+					var updateProdek = new Product(productID, request.Name, request.Price, request.Stock);
+
+					_catalog.UpdateProduct(productID, updateProdek);
+
+					return Ok(ProductResponse.FromModel(updateProdek));
+				}
+				catch (ArgumentException e)
 				{
 					return Problem(
 						statusCode: StatusCodes.Status400BadRequest,
-						title: "Product Already Exists",
-						detail: $"Product with ID {request.ProductID} already exists. Bulk insert aborted."
-					);
+						title: "Invalid product data!",
+						detail: e.Message);
 				}
-
-				// 2. Simpan ke catalog
-				var product = _catalog.AddProduct(request);
-				
-				// 3. Tambahkan ke list response
-				responses.Add(ProductResponse.FromModel(product));
 			}
 
-			// 4. Kembalikan semua produk yang berhasil dibuat
-			// (Untuk bulk insert, biasanya kita kembalikan URL koleksi/list produknya)
-			return CreatedAtAction(
-				nameof(GetAll), 
-				null, 
-				responses
-			);
-		}
+		// [HttpPost]
+		// [ProducesResponseType(typeof(IEnumerable<ProductResponse>), StatusCodes.Status201Created)]
+		// [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+		// public ActionResult<IEnumerable<ProductResponse>> CreateProducts([FromBody] IEnumerable<CreateProductDto> requests)
+		// {
+		// 	var responses = new List<ProductResponse>();
+
+		// 	foreach (var request in requests)
+		// 	{
+		// 		var existingProduct = _catalog.GetProduct(request.ProductID);
+		// 		if (existingProduct is not null)
+		// 		{
+		// 			return Problem(
+		// 				statusCode: StatusCodes.Status400BadRequest,
+		// 				title: "Product Already Exists",
+		// 				detail: $"Product with ID {request.ProductID} already exists. Bulk insert aborted."
+		// 			);
+		// 		}
+
+		// 		var product = _catalog.AddProduct(request);
+				
+		// 		responses.Add(ProductResponse.FromModel(product));
+		// 	}
+
+		// 	return CreatedAtAction(
+		// 		nameof(GetAll), 
+		// 		null, 
+		// 		responses
+		// 	);
+		// }
 
 	}
 }
